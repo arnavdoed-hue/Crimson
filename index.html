@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrimsonSMP - The Ultimate Core</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700;900&family=Rajdhani:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --crimson: #DC143C; --crimson-neon: #ff1a45; --crimson-glow: rgba(220, 20, 60, 0.6);
+            --dark-bg: #050505; --glass-bg: rgba(20, 20, 20, 0.6); --glass-border: rgba(255, 255, 255, 0.08);
+            --text-white: #ffffff; --text-gray: #a0a0a0;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background-color: var(--dark-bg); color: var(--text-white); font-family: 'Inter', sans-serif; overflow-x: hidden; background-image: linear-gradient(rgba(220, 20, 60, 0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(220, 20, 60, 0.03) 1px, transparent 1px); background-size: 40px 40px; }
+        ::-webkit-scrollbar { width: 8px; } ::-webkit-scrollbar-track { background: #000; } ::-webkit-scrollbar-thumb { background: var(--crimson); border-radius: 10px; }
+        a { cursor: pointer; text-decoration: none; }
+        h1, h2, h3, h4, .logo-text, .btn { font-family: 'Rajdhani', sans-serif; text-transform: uppercase; letter-spacing: 2px; }
+        h1, h2 { font-family: 'Orbitron', sans-serif; }
+
+        #welcome-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #000; z-index: 99999; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; transition: opacity 0.3s ease; }
+        .loader-container { display: flex; flex-direction: column; align-items: center; gap: 15px; }
+        .loader-core { width: 50px; height: 50px; position: relative; }
+        .loader-core img { width: 100%; height: 100%; border-radius: 50%; box-shadow: 0 0 20px var(--crimson-glow); animation: corePulse 1s ease-in-out infinite; background: #111; object-fit: cover; }
+        .loader-ring { position: absolute; top: -4px; left: -4px; width: 58px; height: 58px; border: 2px solid transparent; border-top: 2px solid var(--crimson); border-right: 2px solid var(--crimson); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes corePulse { 0%, 100% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } }
+        .loading-text { font-size: 0.9rem; color: var(--crimson-neon); font-family: 'Orbitron', sans-serif; text-transform: uppercase; letter-spacing: 2px; font-weight: 700; text-shadow: 0 0 10px var(--crimson-glow); }
+
+        header { position: sticky; top: 0; z-index: 1000; background: rgba(5,5,5,0.7); backdrop-filter: blur(20px); border-bottom: 1px solid var(--glass-border); }
+        nav { display: flex; justify-content: space-between; align-items: center; max-width: 1400px; margin: 0 auto; padding: 20px 40px; }
+        .nav-logo { display: flex; align-items: center; gap: 15px; }
+        .nav-logo img { height: 45px; width: 45px; border-radius: 8px; box-shadow: 0 0 15px var(--crimson-glow); background: #111; object-fit: cover; }
+        .logo-text { font-size: 1.6rem; font-weight: 700; color: var(--text-white); font-family: 'Orbitron'; letter-spacing: 2px; }
+        .logo-text span { color: var(--crimson); }
+        .menu-btn { background: var(--glass-bg); border: 1px solid var(--crimson); color: #fff; width: 45px; height: 45px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; font-size: 1.2rem; transition: 0.3s; }
+        .menu-btn:hover { background: var(--crimson); box-shadow: 0 0 20px var(--crimson-glow); }
+
+        #overlay-bg { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); z-index: 9998; display: none; opacity: 0; transition: opacity 0.3s; }
+        .side-drawer { position: fixed; top: 0; right: -350px; width: 320px; height: 100%; background: rgba(10,10,10,0.95); backdrop-filter: blur(20px); z-index: 9999; transition: right 0.4s cubic-bezier(0.22, 1, 0.36, 1); padding: 40px 30px; border-left: 1px solid var(--glass-border); display: flex; flex-direction: column; }
+        .side-drawer.open { right: 0; box-shadow: -10px 0 50px rgba(0,0,0,0.5); }
+        .drawer-close { align-self: flex-end; background: transparent; border: none; color: #fff; font-size: 1.5rem; cursor: pointer; transition: 0.3s; margin-bottom: 40px; }
+        .drawer-close:hover { color: var(--crimson); transform: rotate(90deg); }
+        .drawer-nav { list-style: none; display: flex; flex-direction: column; gap: 15px; }
+        .drawer-nav li { border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 15px; }
+        .drawer-nav li a { color: var(--text-white); font-size: 1.2rem; font-family: 'Rajdhani'; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; display: block; transition: 0.3s; }
+        .drawer-nav li a:hover { color: var(--crimson-neon); text-shadow: 0 0 10px var(--crimson-glow); transform: translateX(5px); }
+        .drawer-nav li a.red-link { color: var(--crimson); font-weight: 700; }
+
+        .page { display: none; animation: pageFadeIn 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+        .page.active { display: block; }
+        @keyframes pageFadeIn { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
+        .container { max-width: 1400px; margin: 0 auto; padding: 100px 40px; }
+        .text-center { text-align: center; }
+        .page-title { font-size: 3.5rem; margin-bottom: 15px; font-weight: 900; }
+        .page-subtitle { color: var(--text-gray); max-width: 800px; margin: 0 auto 70px; font-size: 1.2rem; font-family: 'Rajdhani'; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; }
+
+        .hero { text-align: center; padding: 120px 40px; background: radial-gradient(circle at 50% 50%, rgba(220, 20, 60, 0.15) 0%, transparent 60%); border-bottom: 1px solid var(--glass-border); position: relative; overflow: hidden; }
+        .hero h1 { font-size: 5rem; margin-bottom: 15px; font-weight: 900; letter-spacing: 5px; background: linear-gradient(180deg, #fff 0%, #999 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-shadow: 0 10px 30px rgba(0,0,0,0.5); word-break: break-word; }
+        .hero p.subtitle { font-size: 1.4rem; color: var(--crimson-neon); margin-bottom: 50px; font-family: 'Rajdhani'; font-weight: 700; text-transform: uppercase; letter-spacing: 4px; text-shadow: 0 0 20px var(--crimson-glow); }
+        
+        /* FIX: IP Box aur Text ko wrap hone ke liye max-width aur word-break diya */
+        .ip-box { display: inline-flex; align-items: center; gap: 15px; background: var(--glass-bg); padding: 20px 30px; border-radius: 12px; border: 1px solid var(--crimson); margin-bottom: 50px; backdrop-filter: blur(10px); box-shadow: 0 10px 40px rgba(0,0,0,0.3); max-width: 100%; flex-wrap: wrap; justify-content: center; }
+        .ip-label { font-size: 0.9rem; color: var(--text-gray); font-family: 'Rajdhani'; font-weight: 600; text-transform: uppercase; width: 100%; }
+        .ip-text { font-size: 1.5rem; font-weight: 700; font-family: 'Orbitron'; color: #fff; word-break: break-all; max-width: 100%; }
+        .copy-btn { background: var(--crimson); color: white; border: none; padding: 10px 25px; border-radius: 6px; cursor: pointer; font-weight: 700; transition: 0.3s; font-family: 'Rajdhani'; font-size: 1.1rem; text-transform: uppercase; box-shadow: 0 0 15px rgba(220, 20, 60, 0.4); }
+        .copy-btn:hover { background: var(--crimson-neon); transform: scale(1.05); }
+        
+        .server-info { display: flex; justify-content: center; gap: 80px; flex-wrap: wrap; margin-bottom: 50px; }
+        .info-item { min-width: 0; max-width: 100%; }
+        .info-item h4 { color: var(--text-gray); font-size: 0.9rem; text-transform: uppercase; font-family: 'Rajdhani'; letter-spacing: 2px; margin-bottom: 5px; }
+        .info-item p { font-size: 1.4rem; font-weight: 700; font-family: 'Orbitron'; word-break: break-all; }
+        .status-online { color: #28a745; text-shadow: 0 0 15px rgba(40,167,69,0.6); display: flex; align-items: center; gap: 10px; justify-content: center;}
+        .pulse-dot { width: 10px; height: 10px; background: #28a745; border-radius: 50%; box-shadow: 0 0 10px #28a745; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        .managed-by h4 { color: var(--text-gray); font-size: 0.9rem; text-transform: uppercase; font-family: 'Rajdhani'; letter-spacing: 2px; margin-bottom: 15px; }
+        .owners-list { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+        .owner-card { background: var(--glass-bg); padding: 15px 30px; border-radius: 8px; border: 1px solid var(--glass-border); backdrop-filter: blur(5px); }
+
+        .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .card { background: var(--glass-bg); padding: 40px; border-radius: 16px; border: 1px solid var(--glass-border); transition: 0.4s; position: relative; backdrop-filter: blur(10px); overflow: hidden; }
+        .card::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, transparent, var(--crimson), transparent); transform: scaleX(0); transition: transform 0.5s ease; }
+        .card:hover { transform: translateY(-10px); border-color: var(--crimson); box-shadow: 0 20px 50px rgba(0,0,0,0.5), 0 0 30px rgba(220, 20, 60, 0.1); background: rgba(20, 20, 20, 0.8); }
+        .card:hover::before { transform: scaleX(1); }
+        .module-num { color: var(--crimson); font-size: 1rem; font-weight: 700; margin-bottom: 15px; font-family: 'Orbitron'; letter-spacing: 3px; }
+        .btn-outline { background: transparent; color: white; border: 2px solid var(--crimson); padding: 15px 40px; font-size: 1.2rem; border-radius: 8px; cursor: pointer; transition: 0.4s; font-weight: 700; display: inline-block; margin-top: 50px; font-family: 'Rajdhani'; text-transform: uppercase; }
+        .btn-outline:hover { background: var(--crimson); box-shadow: 0 0 30px var(--crimson-glow); color: #fff; }
+
+        .support-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; max-width: 1000px; margin: 0 auto; }
+        .support-card { background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 12px; padding: 30px; text-align: center; transition: 0.3s; cursor: pointer; }
+        .support-card:hover { border-color: var(--crimson); transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .support-card i { font-size: 2.5rem; color: var(--crimson-neon); margin-bottom: 15px; display: block; }
+        .support-card h3 { font-family: 'Rajdhani'; font-size: 1.5rem; margin-bottom: 10px; color: #fff; text-transform: uppercase; }
+        .support-card p { color: var(--text-gray); font-size: 0.9rem; }
+
+        .chat-box { max-height: 300px; overflow-y: auto; margin-bottom: 20px; padding: 10px; background: rgba(0,0,0,0.3); border-radius: 8px; border: 1px solid var(--glass-border); }
+        .chat-msg { margin-bottom: 15px; }
+        .chat-msg.user { text-align: right; }
+        .chat-msg.staff { text-align: left; }
+        .chat-msg .bubble { display: inline-block; padding: 10px 15px; border-radius: 8px; max-width: 80%; }
+        .chat-msg.user .bubble { background: var(--crimson); color: #fff; }
+        .chat-msg.staff .bubble { background: #333; color: #fff; }
+        .chat-msg .meta { font-size: 0.75rem; color: var(--text-gray); margin-top: 5px; }
+        .ticket-success { background: rgba(40, 167, 69, 0.1); border: 1px solid #28a745; padding: 15px; border-radius: 8px; margin-bottom: 20px; text-align: center; }
+
+        .news-card { background: var(--glass-bg); border-radius: 16px; overflow: hidden; border: 1px solid var(--glass-border); transition: 0.4s; margin-bottom: 25px; backdrop-filter: blur(10px); }
+        .news-header { padding: 20px 30px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); }
+        .news-tag { background: var(--crimson); padding: 5px 15px; border-radius: 4px; font-size: 0.85rem; font-weight: 700; font-family: 'Rajdhani'; text-transform: uppercase; box-shadow: 0 0 10px rgba(220, 20, 60, 0.4); }
+        .news-date { color: var(--text-gray); font-size: 1rem; font-family: 'Orbitron'; }
+        .news-body { padding: 30px; }
+        .rule-card { background: var(--glass-bg); padding: 35px; border-radius: 16px; margin-bottom: 25px; border: 1px solid var(--glass-border); border-left: 4px solid var(--crimson); transition: 0.4s; backdrop-filter: blur(10px); }
+
+        .strict-enforcement-box { max-width: 900px; margin: 0 auto 40px; background: rgba(220, 20, 60, 0.05); border: 1px solid var(--crimson); border-radius: 12px; padding: 30px; text-align: center; }
+        .strict-enforcement-box h3 { color: var(--crimson-neon); font-family: 'Orbitron'; margin-bottom: 15px; font-size: 1.5rem; display: flex; align-items: center; justify-content: center; gap: 10px; }
+        .strict-enforcement-box p { color: #ccc; font-size: 1rem; line-height: 1.6; }
+
+        .search-container { max-width: 900px; margin: 0 auto 30px; }
+        .search-container .form-input { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23ff1a45'%3E%3Cpath d='M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: 15px center; background-size: 20px; padding-left: 45px; }
+        .filter-bar { max-width: 900px; margin: 0 auto 40px; display: flex; gap: 15px; justify-content: center; align-items: center; flex-wrap: wrap; }
+        .filter-label { font-family: 'Rajdhani'; font-weight: 700; color: var(--text-gray); text-transform: uppercase; font-size: 0.9rem; letter-spacing: 1px; }
+        .filter-btn { background: transparent; color: var(--text-gray); border: 1px solid var(--glass-border); padding: 8px 20px; border-radius: 6px; cursor: pointer; font-family: 'Rajdhani'; font-weight: 700; text-transform: uppercase; font-size: 0.9rem; transition: 0.3s; }
+        .filter-btn:hover { color: var(--crimson-neon); border-color: var(--crimson); }
+        .filter-btn.active { background: var(--crimson); color: #fff; border-color: var(--crimson); box-shadow: 0 0 10px rgba(220, 20, 60, 0.4); }
+        .no-results { text-align: center; color: var(--text-gray); padding: 40px; font-size: 1.2rem; font-family: 'Orbitron'; border: 1px dashed var(--glass-border); border-radius: 12px; }
+
+        .form-container { max-width: 550px; margin: 0 auto; background: var(--glass-bg); padding: 50px; border-radius: 16px; border: 1px solid var(--glass-border); backdrop-filter: blur(15px); }
+        .form-group { margin-bottom: 30px; text-align: left; }
+        .form-group label { display: block; margin-bottom: 10px; color: var(--crimson-neon); font-size: 0.9rem; font-family: 'Rajdhani'; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
+        .form-input { width: 100%; padding: 15px; background: rgba(0,0,0,0.5); border: 1px solid var(--glass-border); border-radius: 8px; color: white; font-size: 1.1rem; transition: 0.3s; font-family: 'Inter'; }
+        .form-input:focus { outline: none; border-color: var(--crimson); box-shadow: 0 0 15px var(--crimson-glow); }
+        .btn-primary { width: 100%; background: var(--crimson); color: white; border: none; padding: 16px; font-size: 1.3rem; border-radius: 8px; cursor: pointer; font-weight: 700; font-family: 'Rajdhani'; text-transform: uppercase; letter-spacing: 2px; transition: 0.3s; display: block; text-align: center; box-shadow: 0 0 20px rgba(220, 20, 60, 0.3); }
+        .btn-primary:hover { background: var(--crimson-neon); box-shadow: 0 0 40px var(--crimson-glow); transform: translateY(-2px); }
+        
+        .admin-sub-card { border: 1px solid var(--glass-border); padding: 20px; border-radius: 8px; margin-bottom: 20px; background: rgba(0,0,0,0.2); }
+        .admin-sub-card h4 { color: var(--crimson-neon); margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center; }
+        .btn-add { background: transparent; color: #28a745; border: 2px solid #28a745; padding: 10px 20px; font-size: 0.9rem; border-radius: 6px; cursor: pointer; transition: 0.3s; font-weight: 700; display: inline-block; margin-bottom: 20px; font-family: 'Rajdhani'; text-transform: uppercase; }
+        .btn-add:hover { background: #28a745; color: #fff; box-shadow: 0 0 15px rgba(40,167,69,0.4); }
+        .btn-remove { background: transparent; color: #666; border: 1px solid #444; padding: 5px 10px; font-size: 0.8rem; border-radius: 4px; cursor: pointer; transition: 0.3s; font-weight: 700; }
+        .btn-remove:hover { color: #ff1a45; border-color: #ff1a45; }
+
+        .logo-settings-box { display: flex; gap: 20px; align-items: flex-start; background: rgba(0,0,0,0.3); padding: 20px; border-radius: 8px; border: 1px solid var(--glass-border); margin-bottom: 20px; }
+        .logo-preview-img { width: 80px; height: 80px; border-radius: 8px; object-fit: cover; border: 1px solid var(--crimson); box-shadow: 0 0 10px var(--crimson-glow); flex-shrink: 0; background: #000; }
+        .logo-input-group { flex: 1; display: flex; flex-direction: column; gap: 10px; justify-content: center; height: 80px; }
+        .upload-btn-wrapper { position: relative; overflow: hidden; display: inline-block; width: 100%; }
+        .upload-btn { background: transparent; color: var(--crimson-neon); border: 1px solid var(--crimson); padding: 10px 20px; border-radius: 6px; font-family: 'Rajdhani'; font-weight: 700; text-transform: uppercase; font-size: 0.9rem; cursor: pointer; width: 100%; text-align: center; transition: 0.3s; }
+        .upload-btn:hover { background: var(--crimson); color: #fff; }
+        .upload-btn-wrapper input[type=file] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+        .rule-list-item { display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); border: 1px solid var(--glass-border); padding: 15px 20px; border-radius: 8px; margin-bottom: 10px; }
+        .rule-list-info { display: flex; align-items: center; gap: 15px; flex: 1; min-width: 0; }
+        .rule-list-num { background: var(--crimson); color: #fff; width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-family: 'Orbitron'; font-size: 0.9rem; flex-shrink: 0; }
+        .rule-list-text { flex: 1; min-width: 0; }
+        .rule-list-text strong { display: block; color: #fff; font-family: 'Rajdhani'; font-size: 1.1rem; }
+        .rule-list-text span { display: block; color: #777; font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+        .rule-list-actions { display: flex; gap: 8px; flex-shrink: 0; }
+        .rule-action-btn { background: transparent; border: 1px solid #333; color: #888; width: 35px; height: 35px; border-radius: 5px; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; }
+        .rule-action-btn:hover { color: var(--crimson-neon); border-color: var(--crimson-neon); }
+        .rule-action-btn:disabled { opacity: 0.2; cursor: not-allowed; }
+
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 50px; flex-wrap: wrap; gap: 20px; border-bottom: 1px solid var(--glass-border); padding-bottom: 30px; }
+        .admin-tabs { display: flex; gap: 10px; margin-bottom: 40px; border-bottom: 1px solid var(--glass-border); flex-wrap: wrap; }
+        .admin-tab-btn { background: transparent; border: none; color: var(--text-gray); padding: 12px 20px; font-family: 'Rajdhani'; font-weight: 600; font-size: 1rem; text-transform: uppercase; letter-spacing: 1px; cursor: pointer; border-bottom: 2px solid transparent; transition: 0.3s; }
+        .admin-tab-btn.active { color: var(--crimson-neon); border-bottom: 2px solid var(--crimson); }
+        .admin-content { display: none; }
+        .admin-content.active { display: block; animation: fadeIn 0.5s ease; }
+        .admin-card { background: var(--glass-bg); padding: 40px; border-radius: 12px; border: 1px solid var(--glass-border); margin-bottom: 20px; }
+
+        footer { background: rgba(0,0,0,0.8); padding: 60px 40px; border-top: 1px solid var(--glass-border); text-align: center; backdrop-filter: blur(10px); }
+        .footer-logo { font-size: 2rem; font-weight: 900; color: var(--text-white); margin-bottom: 15px; font-family: 'Orbitron'; }
+        .footer-logo span { color: var(--crimson); }
+        .footer-links { margin: 25px 0; display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+        .footer-links a { color: var(--text-gray); transition: 0.3s; font-size: 0.9rem; font-family: 'Rajdhani'; font-weight: 600; text-transform: uppercase; }
+        .footer-links a:hover { color: var(--crimson-neon); text-shadow: 0 0 10px var(--crimson-glow); }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 3rem; } .page-title { font-size: 2.5rem; } .side-drawer { width: 280px; }
+            .rule-list-item { flex-direction: column; align-items: flex-start; gap: 15px; } .rule-list-info { width: 100%; }
+            .rule-list-text span { white-space: normal; overflow: visible; text-overflow: clip; } .rule-list-actions { width: 100%; justify-content: space-between; } .rule-action-btn { width: 45px; height: 45px; }
+            .loader-core { width: 40px; height: 40px; } .loader-ring { top: -3px; left: -3px; width: 46px; height: 46px; } .loading-text { font-size: 0.8rem; }
+            .logo-settings-box { flex-direction: column; align-items: center; } .logo-input-group { width: 100%; height: auto; }
+            .ip-text { font-size: 1.2rem; } /* Mobile par IP text thoda chhota */
+        }
+    </style>
+</head>
+<body>
+
+    <!-- COMPACT LOADING SCREEN -->
+    <div id="welcome-overlay">
+        <div class="loader-container">
+            <div class="loader-core">
+                <img src="https://z-cdn-media.chatglm.cn/files/f0b222be-3cc3-4d52-9e60-8c4ef4184549.png?auth_key=1883356769-d2f34aaad02840e49bdd1902cda8a1a5-0-9c6caae45310a984f432f3a3c62d8f92" alt="Logo" class="site-logo" onerror="this.onerror=null; this.src='https://placehold.co/50x50/000000/DC143C/png?text=SMP';">
+                <div class="loader-ring"></div>
+            </div>
+            <div class="loading-text">Igniting Crimson Core...</div>
+        </div>
+    </div>
+
+    <script>
+        setTimeout(function() {
+            var l = document.getElementById('welcome-overlay');
+            if (l) { l.style.opacity = '0'; setTimeout(function() { l.style.display = 'none'; }, 500); }
+        }, 1500);
+    </script>
+
+    <!-- NAVBAR -->
+    <header>
+        <nav>
+            <a class="nav-logo" onclick="navigateTo('home')">
+                <img src="https://z-cdn-media.chatglm.cn/files/f0b222be-3cc3-4d52-9e60-8c4ef4184549.png?auth_key=1883356769-d2f34aaad02840e49bdd1902cda8a1a5-0-9c6caae45310a984f432f3a3c62d8f92" alt="Logo" class="site-logo" onerror="this.onerror=null; this.src='https://placehold.co/45x45/000000/DC143C/png?text=SMP';">
+                <span class="logo-text">CRIMSON<span>SMP</span></span>
+            </a>
+            <button class="menu-btn" onclick="toggleDrawer()"><i class="fas fa-bars"></i></button>
+        </nav>
+    </header>
+
+    <!-- SIDE DRAWER -->
+    <div id="overlay-bg" onclick="toggleDrawer()"></div>
+    <div id="side-drawer" class="side-drawer">
+        <button class="drawer-close" onclick="toggleDrawer()"><i class="fas fa-times"></i></button>
+        <ul class="drawer-nav" id="menu-logged-out">
+            <li><a class="nav-link active" data-page="home" onclick="navigateTo('home')">Home</a></li>
+            <li><a class="nav-link" data-page="concept" onclick="navigateTo('concept')">The Concept</a></li>
+            <li><a class="nav-link" data-page="announcements" onclick="navigateTo('announcements')">Announcements</a></li>
+            <li><a class="nav-link" data-page="rules" onclick="navigateTo('rules')">Rules</a></li>
+            <li><a class="nav-link" data-page="support" onclick="navigateTo('support')">Support</a></li>
+            <li><a class="nav-link red-link" data-page="portal" onclick="navigateTo('portal')">Owner Portal</a></li>
+        </ul>
+        <ul class="drawer-nav" id="menu-logged-in" style="display: none;">
+            <li><a class="nav-link active" data-page="home" onclick="navigateTo('home')">Home</a></li>
+            <li><a class="nav-link" data-page="concept" onclick="navigateTo('concept')">The Concept</a></li>
+            <li><a class="nav-link" data-page="announcements" onclick="navigateTo('announcements')">Announcements</a></li>
+            <li><a class="nav-link" data-page="rules" onclick="navigateTo('rules')">Rules</a></li>
+            <li><a class="nav-link" data-page="support" onclick="navigateTo('support')">Support</a></li>
+            <li><a class="nav-link red-link" data-page="admin" onclick="navigateTo('admin')">Admin Dashboard</a></li>
+            <li><a class="nav-link red-link" onclick="logoutAdmin()">Logout Admin Session</a></li>
+        </ul>
+    </div>
+
+    <!-- HOME PAGE -->
+    <div id="home" class="page active">
+        <section class="hero">
+            <h1 id="live-hero-title">CRIMSON SMP</h1>
+            <p class="subtitle" id="live-hero-tagline">Unleash the Fury of the Crimson Core</p>
+            <div class="ip-box">
+                <div><div class="ip-label">Server IP Address</div><div class="ip-text" id="live-ip">Soon</div></div>
+                <button class="copy-btn" onclick="copyIp()">Copy ID</button>
+            </div>
+            <div class="server-info">
+                <div class="info-item"><h4>Version</h4><p>1.20+ SUPPORTED</p></div>
+                <div class="info-item"><h4>Status</h4><p class="status-online"><span class="pulse-dot"></span> ONLINE</p></div>
+                <div class="info-item"><h4>Platform</h4><p>JAVA & BEDROCK</p></div>
+            </div>
+            <div class="managed-by">
+                <h4>Managed By:</h4>
+                <div class="owners-list" id="live-owners">
+                    <div class="owner-card"><div class="owner-name">VENPAIWHITHER</div><div class="owner-role">Owner</div></div>
+                    <div class="owner-card"><div class="owner-name">NOTSGPLAYS</div><div class="owner-role">Owner</div></div>
+                </div>
+            </div>
+        </section>
+        <div class="container">
+            <h2 class="page-title text-center">The CustomCrimsons Power Matrix</h2>
+            <p class="page-subtitle text-center">Forge unique skills, unlock specialized combat elements</p>
+            <div class="grid-3" id="live-home-modules"></div>
+            <div class="text-center"><button class="btn-outline" onclick="navigateTo('concept')">Explore The Complete Concept</button></div>
+        </div>
+        <div class="container" style="padding-top: 0;">
+            <h2 class="page-title text-center">Updates & Logs</h2>
+            <p class="page-subtitle text-center">Latest Server Announcements - <a onclick="navigateTo('announcements')" style="color: var(--crimson-neon); cursor: pointer; text-decoration: underline;">View All Announcements</a></p>
+            <div style="max-width: 900px; margin: 0 auto;" id="live-home-news"></div>
+        </div>
+        <div class="container" style="padding-top: 0;">
+            <h2 class="page-title text-center">Need Help?</h2>
+            <p class="page-subtitle text-center">Facing an issue? Our support team is here to assist you.</p>
+            <div class="text-center"><button class="btn-outline" onclick="navigateTo('support')">Visit Support Center</button></div>
+        </div>
+    </div>
+
+    <!-- THE CONCEPT PAGE -->
+    <div id="concept" class="page">
+        <div class="container">
+            <h2 class="page-title text-center" id="live-lore-title">The Lore & Abilities</h2>
+            <p class="page-subtitle text-center" id="live-lore-subtitle">A brand new style of competitive SMP</p>
+            <p style="text-align: center; max-width: 800px; margin: 0 auto 60px; color: #ccc; font-size: 1.1rem;" id="live-lore-desc">CrimsonSMP is a high-octane Minecraft SMP designed around CustomCrimsons—a custom ability-based gameplay system. Forge alliances, master lethal skills, and fight for dominance in a custom red-and-black landscape tailored for competitive warriors.</p>
+            <div class="grid-3" id="live-lore-modules"></div>
+        </div>
+    </div>
+
+    <!-- ANNOUNCEMENTS PAGE -->
+    <div id="announcements" class="page">
+        <div class="container">
+            <h2 class="page-title text-center">Server Announcements</h2>
+            <p class="page-subtitle text-center">Stay fully informed about server events, client updates, rules patches, and the competitive meta.</p>
+            <div class="search-container"><input type="text" id="news-search-input" class="form-input" placeholder="Search news..." oninput="searchNews()"></div>
+            <div class="filter-bar">
+                <span class="filter-label">Filter:</span>
+                <button class="filter-btn active" onclick="filterNews('all', this)">All</button>
+                <button class="filter-btn" onclick="filterNews('Launch', this)">Launch</button>
+                <button class="filter-btn" onclick="filterNews('Rules', this)">Rules</button>
+            </div>
+            <div style="max-width: 900px; margin: 0 auto;" id="live-news-page"></div>
+        </div>
+    </div>
+
+    <!-- RULES PAGE -->
+    <div id="rules" class="page">
+        <div class="container">
+            <h2 class="page-title text-center">Player Charter</h2>
+            <p class="page-subtitle text-center">Official Server Rules</p>
+            <div class="strict-enforcement-box">
+                <h3><i class="fas fa-shield-alt"></i> Strict Enforcement Policy</h3>
+                <p>Our administration logs all player movements, block edits, and PvP state changes. Ignorance of these rules is not an excuse. Violating these guidelines will result in temporary or permanent IP-range and hardware-ID bans without appeal.</p>
+            </div>
+            <div class="search-container"><input type="text" id="rules-search-input" class="form-input" placeholder="Search rules (e.g., hacking, combat, pvp)..." oninput="searchRules()"></div>
+            <div style="max-width: 900px; margin: 0 auto;" id="live-rules-page"></div>
+        </div>
+    </div>
+
+    <!-- SUPPORT HUB PAGE -->
+    <div id="support" class="page">
+        <div class="container">
+            <h2 class="page-title text-center">Support Center</h2>
+            <p class="page-subtitle text-center">Need assistance? Select a category below to get help from our staff team.</p>
+            <div class="support-cards">
+                <div class="support-card" onclick="navigateTo('support-general')">
+                    <i class="fas fa-headset"></i><h3>General Support</h3><p>Have a question about the server, gameplay, or need technical help?</p>
+                </div>
+                <div class="support-card" onclick="navigateTo('support-report')">
+                    <i class="fas fa-flag"></i><h3>Report a Player</h3><p>Found someone breaking rules or using hacks? Report them here.</p>
+                </div>
+                <div class="support-card" onclick="navigateTo('support-appeal')">
+                    <i class="fas fa-gavel"></i><h3>Appeal a Ban</h3><p>Banned or muted? Submit an appeal to have your case reviewed.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUPPORT: GENERAL PAGE -->
+    <div id="support-general" class="page">
+        <div class="container">
+            <h2 class="page-title text-center">General Support</h2>
+            <p class="page-subtitle text-center">We are here to help you with any questions or issues.</p>
+            <div class="form-container" id="support-form-container">
+                <div class="form-group"><label>Your Minecraft Username</label><input type="text" class="form-input" id="support-username" placeholder="Enter your username"></div>
+                <div class="form-group"><label>Your Question</label><textarea class="form-input" rows="4" id="support-question" placeholder="Type your question here..."></textarea></div>
+                <button class="btn-primary" onclick="submitGeneralSupport()">Submit Question</button>
+            </div>
+            <div class="form-container" id="support-reply-container" style="display: none;">
+                <div class="ticket-success">
+                    <p style="color: #28a745; font-weight: bold; font-size: 1.2rem;">✅ Ticket Created! ID: <span id="active-ticket-id"></span></p>
+                    <p style="font-size: 0.9rem; color: var(--text-gray);">Our staff has been notified on Discord. Please wait for a reply...</p>
+                </div>
+                <div class="chat-box" id="chat-box"></div>
+                <button class="btn-outline" style="width: 100%; margin-top: 0; border-color: #ff1a45; color: #ff1a45;" onclick="closeTicket()">Close Ticket</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUPPORT: REPORT PAGE -->
+    <div id="support-report" class="page">
+        <div class="container">
+            <h2 class="page-title text-center">Report a Player</h2>
+            <p class="page-subtitle text-center">Help us keep the community clean and fair.</p>
+            <div class="form-container" id="report-form-container">
+                <div class="form-group"><label>Your Minecraft Username</label><input type="text" class="form-input" id="report-reporter" placeholder="Enter your username"></div>
+                <div class="form-group"><label>Player Name (Who to report)</label><input type="text" class="form-input" id="report-offender" placeholder="Enter rule breaker's username"></div>
+                <div class="form-group"><label>Reason</label><textarea class="form-input" rows="4" id="report-reason" placeholder="Explain what happened..."></textarea></div>
+                <div class="form-group">
+                    <label>Upload Screenshot/Video</label>
+                    <div class="upload-btn-wrapper" style="height: 50px;">
+                        <button class="upload-btn" style="padding: 15px;">Choose File from Device</button>
+                        <input type="file" id="report-evidence" accept="image/*,video/*">
+                    </div>
+                    <p id="file-name" style="font-size: 0.8rem; color: #888; margin-top: 5px;"></p>
+                </div>
+                <button class="btn-primary" onclick="submitReport()">Submit Report</button>
+            </div>
+            <div class="form-container" id="report-success-container" style="display: none;">
+                <div class="ticket-success">
+                    <p style="color: #28a745; font-weight: bold; font-size: 1.2rem;">✅ Thank You for reporting!</p>
+                    <p style="font-size: 0.9rem; color: var(--text-gray);">Our staff has been notified with your evidence. Action will be taken shortly.</p>
+                </div>
+                <button class="btn-outline" style="width: 100%; margin-top: 0;" onclick="navigateTo('home')">Back to Home</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUPPORT: APPEAL PAGE -->
+    <div id="support-appeal" class="page">
+        <div class="container">
+            <h2 class="page-title text-center">Appeal a Ban</h2>
+            <p class="page-subtitle text-center">Submit your case for review by the administration.</p>
+            <div class="form-container" id="appeal-form-container">
+                <div class="form-group"><label>Banned Minecraft Username</label><input type="text" class="form-input" id="appeal-username" placeholder="Enter your username"></div>
+                <div class="form-group"><label>Reason for Ban (If known)</label><input type="text" class="form-input" id="appeal-ban-reason" placeholder="Why were you banned?"></div>
+                <div class="form-group"><label>Why should you be unbanned?</label><textarea class="form-input" rows="4" id="appeal-unban-reason" placeholder="Explain your side of the story..."></textarea></div>
+                <button class="btn-primary" onclick="submitAppeal()">Submit Appeal</button>
+            </div>
+            <div class="form-container" id="appeal-success-container" style="display: none;">
+                <div class="ticket-success">
+                    <p style="color: #28a745; font-weight: bold; font-size: 1.2rem;">✅ Appeal Submitted!</p>
+                    <p style="font-size: 0.9rem; color: var(--text-gray);">Our staff will review your case and make a decision.</p>
+                </div>
+                <button class="btn-outline" style="width: 100%; margin-top: 0;" onclick="navigateTo('home')">Back to Home</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- OWNER PORTAL PAGE -->
+    <div id="portal" class="page">
+        <div class="container">
+            <h2 class="page-title text-center">Owner Gate</h2>
+            <p class="page-subtitle text-center">Authorized Admin Access</p>
+            <div class="form-container">
+                <div class="form-group"><label>Minecraft Username</label><input type="text" class="form-input" id="login-user" placeholder="Enter username"></div>
+                <div class="form-group"><label>Access Password</label><input type="password" class="form-input" id="login-pass" placeholder="Enter password"></div>
+                <button class="btn-primary" onclick="loginAdmin()">Enter Portal</button>
+                <p style="text-align: center; margin-top: 20px; font-size: 0.85rem; color: var(--text-gray); text-transform: uppercase; letter-spacing: 1px;">Authorized access only.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADMIN DASHBOARD PAGE -->
+    <div id="admin" class="page">
+        <div class="container">
+            <div class="admin-header">
+                <h2 style="font-size: 2.5rem; font-weight: 900; font-family: 'Orbitron';">Welcome back, Administrator</h2>
+                <button class="btn-outline" style="padding: 12px 25px; margin: 0; border-color: #ff1a45; color: #ff1a45;" onclick="logoutAdmin()">Logout Session</button>
+            </div>
+            <div class="admin-tabs">
+                <button class="admin-tab-btn active" onclick="showAdminTab('general')">General Settings</button>
+                <button class="admin-tab-btn" onclick="showAdminTab('lore')">Dynamic Lore Page</button>
+                <button class="admin-tab-btn" onclick="showAdminTab('news')">Manage News Feed</button>
+                <button class="admin-tab-btn" onclick="showAdminTab('rules')">Rules Manager</button>
+            </div>
+            <div id="admin-general" class="admin-content active">
+                <div class="admin-card">
+                    <h3 style="margin-bottom: 20px; font-size: 1.5rem;">Configure Core Identity</h3>
+                    <div class="form-group"><label>Dynamic Minecraft Server IP</label><input type="text" class="form-input" id="admin-ip" value="Soon"></div>
+                    <div class="form-group"><label>Homepage Hero Title</label><input type="text" class="form-input" id="admin-hero-title" value="CRIMSON SMP"></div>
+                    <div class="form-group"><label>Homepage Hero Tagline</label><input type="text" class="form-input" id="admin-hero-tagline" value="Unleash the Fury of the Crimson Core"></div>
+                    <div class="form-group"><label>Server Owners (Comma-separated)</label><input type="text" class="form-input" id="admin-owners" value="VenpaiWhither, NotSgplays"></div>
+                    <h4 style="margin-top: 30px; margin-bottom: 15px;">Social Media Links</h4>
+                    <div class="form-group"><label>Discord Invitation</label><input type="text" class="form-input" id="admin-discord" value="https://discord.com/invite/TWAZ2vgQJp"></div>
+                    <div class="form-group"><label>Twitter/X URL</label><input type="text" class="form-input" id="admin-twitter" value="https://x.com/profile"></div>
+                    <div class="form-group"><label>YouTube URL</label><input type="text" class="form-input" id="admin-youtube" value="https://youtube.com/@channel"></div>
+                    <h4 style="margin-top: 40px; margin-bottom: 15px;">Server Logo Image Settings</h4>
+                    <div class="logo-settings-box">
+                        <img id="admin-logo-preview" src="https://z-cdn-media.chatglm.cn/files/f0b222be-3cc3-4d52-9e60-8c4ef4184549.png?auth_key=1883356769-d2f34aaad02840e49bdd1902cda8a1a5-0-9c6caae45310a984f432f3a3c62d8f92" class="logo-preview-img" onerror="this.onerror=null; this.src='https://placehold.co/80x80/000000/DC143C/png?text=SMP';">
+                        <div class="logo-input-group">
+                            <div class="upload-btn-wrapper">
+                                <button class="upload-btn">Upload from Device</button>
+                                <input type="file" id="admin-logo-upload" accept="image/*" onchange="handleLogoUpload(event)">
+                            </div>
+                            <button class="btn-remove" onclick="resetLogoUrl()" style="align-self: center; margin-top: 5px;">Reset Default</button>
+                        </div>
+                    </div>
+                    <button class="btn-primary" onclick="saveAllChanges(true)">Save Identity</button>
+                </div>
+            </div>
+            <div id="admin-lore" class="admin-content">
+                <div class="admin-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="font-size: 1.5rem;">Edit Dynamic Lore Page</h3>
+                        <span style="color: var(--crimson-neon); font-family: 'Orbitron'; font-weight: 700;">Modules: <span id="module-count">3/6</span></span>
+                    </div>
+                    <div class="form-group"><label>Lore Page Title</label><input type="text" class="form-input" id="admin-lore-title" value="The Lore & Abilities"></div>
+                    <div class="form-group"><label>Lore Page Subtitle</label><input type="text" class="form-input" id="admin-lore-subtitle" value="A brand new style of competitive SMP"></div>
+                    <div class="form-group"><label>Lore Description</label><textarea class="form-input" rows="4" id="admin-lore-desc">CrimsonSMP is a high-octane Minecraft SMP designed around CustomCrimsons—a custom ability-based gameplay system. Forge alliances, master lethal skills, and fight for dominance in a custom red-and-black landscape tailored for competitive warriors.</textarea></div>
+                    <div id="admin-modules-container"></div>
+                    <button class="btn-add" onclick="addModule()" id="btn-add-module">+ Add Module</button>
+                    <button class="btn-primary" onclick="saveAllChanges(true)">Publish Lore & Abilities</button>
+                </div>
+            </div>
+            <div id="admin-news" class="admin-content">
+                <div class="admin-card">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="font-size: 1.5rem;">Official Announcement Feed</h3>
+                        <button class="btn-add" onclick="addNewsPost()" style="margin-bottom: 0;">+ New Post</button>
+                    </div>
+                    <p style="color: var(--text-gray); margin-bottom: 20px;">Edit existing or add new posts. Changes update instantly.</p>
+                    <div id="admin-news-container"></div>
+                    <button class="btn-primary" onclick="saveAllChanges(true)">Save News Feed</button>
+                </div>
+            </div>
+            <div id="admin-rules" class="admin-content">
+                <div class="admin-card">
+                    <button class="btn-primary" onclick="saveAllChanges(true)" style="margin-bottom: 30px;">Save Rules List</button>
+                    <div class="admin-sub-card">
+                        <h4 id="rule-form-title" style="color: var(--text-white);">Add New Rule</h4>
+                        <div class="form-group"><label>Rule Title</label><input type="text" class="form-input" id="new-rule-title" placeholder="Enter rule title..."></div>
+                        <div class="form-group"><label>Rule Description</label><textarea class="form-input" rows="3" id="new-rule-desc" placeholder="Enter rule description..."></textarea></div>
+                        <button class="btn-add" id="rule-submit-btn" onclick="submitRule()" style="margin-bottom: 0;">Add to List</button>
+                    </div>
+                    <h4 style="margin-top: 30px; margin-bottom: 15px; color: var(--crimson-neon);">Current Rules Preview (<span id="rule-count">3</span>)</h4>
+                    <div id="rules-admin-preview"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="footer-logo">CRIMSON<span>SMP</span></div>
+        <p style="color: var(--text-gray); margin-bottom: 20px;">Developed by VenpaiWhither & NotSgplays</p>
+        <div class="footer-links">
+            <a href="https://discord.com/invite/TWAZ2vgQJp" target="_blank" class="live-discord">Discord</a>
+            <a href="https://x.com/profile" target="_blank" class="live-twitter">Twitter/X</a>
+            <a href="https://youtube.com/@channel" target="_blank" class="live-youtube">YouTube</a>
+            <a onclick="copyIp()">IP: <span id="live-ip-footer">Soon</span></a>
+        </div>
+    </footer>
+
+    <!-- JAVASCRIPT -->
+    <script>
+        const BACKEND_URL = "https://crimson-support.onrender.com"; 
+        const DB_URL = "https://crimson-smp-175b1-default-rtdb.asia-southeast1.firebasedatabase.app/data.json"; 
+        
+        const DEFAULT_LOGO = "https://z-cdn-media.chatglm.cn/files/f0b222be-3cc3-4d52-9e60-8c4ef4184549.png?auth_key=1883356769-d2f34aaad02840e49bdd1902cda8a1a5-0-9c6caae45310a984f432f3a3c62d8f92";
+        let currentLogoSrc = DEFAULT_LOGO; 
+        
+        let modules = [
+            { title: 'Custom Crimson Abilities', desc: 'Gain access to special active and passive blood-bound abilities that dynamically alter combat and traversal.' },
+            { title: 'Competitive PvP Core', desc: 'Built for fighters. Enjoy optimized servers, custom dueling arenas, and intensive clan conflicts.' },
+            { title: 'Player-Driven Marketplace', desc: 'Trade custom custom-crimson items and cosmetics in a completely simulated player economy.' }
+        ];
+        let newsPosts = [
+            { tag: 'Launch', date: '2026-07-05', title: 'Season 1: The Crimson Awakening is LIVE!', content: 'Prepare yourselves, warriors! CrimsonSMP has officially opened its doors. Connect now using the server IP above, choose your class, and begin your journey. Special launch event kits are available for the next 48 hours only!', author: 'VenpaiWhither' },
+            { tag: 'Rules', date: '2026-07-04', title: 'Official Server Rules & Fair Play Policy', content: 'To ensure a competitive yet fair environment for all players, please review our core rules: 1. No hacked clients, X-Ray, or automated scripts. 2. Respect your fellow competitors (no hate speech). 3. Exploits must be reported immediately. Violations will result in a permanent hardware ban.', author: 'NotSgplays' }
+        ];
+        let rulesList = [
+            { title: 'No Hacked Clients or Exploiting', desc: 'Using hacked clients, X-ray resource packs, autoclickers, macros, or exploiting game glitches is strictly forbidden and results in an immediate ban.' },
+            { title: 'Respect and Fair Play', desc: 'Extreme toxicity, hate speech, racism, doxxing, harassment, and severe griefing are strictly prohibited. Maintain sportsmanship and respect other players.' },
+            { title: 'No Combat Logging', desc: 'Disconnecting from the server while in active combat is not allowed. Fair play keeps the SMP competitive and engaging.' }
+        ];
+        let editingRuleIndex = -1;
+        let activeNewsFilter = 'all';
+
+        // --- CLOUD DATABASE (FIREBASE) LOGIC ---
+        async function loadData() {
+            try {
+                const response = await fetch(DB_URL);
+                if (!response.ok) return; 
+                const data = await response.json();
+                if (!data) return;
+
+                if(data.modules) modules = data.modules;
+                if(data.newsPosts) newsPosts = data.newsPosts;
+                if(data.rulesList) rulesList = data.rulesList;
+                if(data.logo) currentLogoSrc = data.logo;
+
+                if (data.identity) {
+                    document.getElementById('admin-ip').value = data.identity.ip || 'Soon';
+                    document.getElementById('admin-hero-title').value = data.identity.heroTitle || 'CRIMSON SMP';
+                    document.getElementById('admin-hero-tagline').value = data.identity.heroTagline || 'Unleash the Fury of the Crimson Core';
+                    document.getElementById('admin-owners').value = data.identity.owners || 'VenpaiWhither, NotSgplays';
+                    document.getElementById('admin-discord').value = data.identity.discord || 'https://discord.com/invite/TWAZ2vgQJp';
+                    document.getElementById('admin-twitter').value = data.identity.twitter || 'https://x.com/profile';
+                    document.getElementById('admin-youtube').value = data.identity.youtube || 'https://youtube.com/@channel';
+                }
+                if (data.lore) {
+                    document.getElementById('admin-lore-title').value = data.lore.title || 'The Lore & Abilities';
+                    document.getElementById('admin-lore-subtitle').value = data.lore.subtitle || 'A brand new style of competitive SMP';
+                    document.getElementById('admin-lore-desc').value = data.lore.desc || 'CrimsonSMP is a high-octane Minecraft SMP designed around CustomCrimsons—a custom ability-based gameplay system. Forge alliances, master lethal skills, and fight for dominance in a custom red-and-black landscape tailored for competitive warriors.';
+                }
+                document.getElementById('admin-logo-preview').src = currentLogoSrc;
+            } catch (e) { 
+                console.error("Load error:", e); 
+            }
+        }
+
+        async function saveData() {
+            try {
+                const data = {
+                    modules: modules,
+                    newsPosts: newsPosts,
+                    rulesList: rulesList,
+                    logo: currentLogoSrc,
+                    identity: {
+                        ip: document.getElementById('admin-ip').value,
+                        heroTitle: document.getElementById('admin-hero-title').value,
+                        heroTagline: document.getElementById('admin-hero-tagline').value,
+                        owners: document.getElementById('admin-owners').value,
+                        discord: document.getElementById('admin-discord').value,
+                        twitter: document.getElementById('admin-twitter').value,
+                        youtube: document.getElementById('admin-youtube').value
+                    },
+                    lore: {
+                        title: document.getElementById('admin-lore-title').value,
+                        subtitle: document.getElementById('admin-lore-subtitle').value,
+                        desc: document.getElementById('admin-lore-desc').value
+                    }
+                };
+                await fetch(DB_URL, {
+                    method: 'PUT', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                return true;
+            } catch (e) {
+                console.error("Save error:", e);
+                return false;
+            }
+        }
+
+        // --- DISCORD BOT INTEGRATION ---
+        let activeTicketId = null;
+        let replyCheckInterval = null;
+        function generateTicketId() { return Math.floor(Math.random() * 900000) + 100000; }
+
+        async function submitGeneralSupport() {
+            const username = document.getElementById('support-username').value.trim();
+            const question = document.getElementById('support-question').value.trim();
+            if(!username || !question) { alert('Please enter both username and question.'); return; }
+            activeTicketId = generateTicketId();
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/general-support`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, question, ticketId: activeTicketId })
+                });
+                const data = await response.json();
+                if(data.success) {
+                    document.getElementById('support-form-container').style.display = 'none';
+                    document.getElementById('support-reply-container').style.display = 'block';
+                    document.getElementById('active-ticket-id').innerText = activeTicketId;
+                    document.getElementById('chat-box').innerHTML = `<div class="chat-msg user"><div class="bubble">${question}</div><div class="meta">You (Just now)</div></div>`;
+                    replyCheckInterval = setInterval(checkForReplies, 5000);
+                } else { alert('Error creating ticket.'); }
+            } catch (error) { console.error("Error:", error); alert('Failed to connect to server.'); }
+        }
+
+        async function checkForReplies() {
+            if (!activeTicketId) return;
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/get-replies/${activeTicketId}`);
+                const data = await response.json();
+                const chatBox = document.getElementById('chat-box');
+                data.replies.forEach(reply => {
+                    if(!document.getElementById(`reply-${reply.timestamp}`)) {
+                        chatBox.innerHTML += `<div id="reply-${reply.timestamp}" class="chat-msg staff"><div class="bubble">${reply.content}</div><div class="meta">Staff: ${reply.author} (${reply.timestamp})</div></div>`;
+                        chatBox.scrollTop = chatBox.scrollHeight;
+                    }
+                });
+            } catch (error) { console.error("Polling error:", error); }
+        }
+
+        async function closeTicket() {
+            if (!activeTicketId) return;
+            try {
+                await fetch(`${BACKEND_URL}/api/close-ticket`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ticketId: activeTicketId })
+                });
+            } catch (error) { console.error("Close ticket error:", error); }
+            finally {
+                clearInterval(replyCheckInterval);
+                document.getElementById('support-reply-container').style.display = 'none';
+                document.getElementById('support-form-container').style.display = 'block';
+                document.getElementById('chat-box').innerHTML = '';
+                document.getElementById('support-username').value = '';
+                document.getElementById('support-question').value = '';
+                activeTicketId = null;
+            }
+        }
+
+        const reportEvidence = document.getElementById('report-evidence');
+        if (reportEvidence) {
+            reportEvidence.addEventListener('change', function(e) {
+                const fileInput = e.target;
+                const fileNameDiv = document.getElementById('file-name');
+                if (fileNameDiv) fileNameDiv.innerText = fileInput.files[0] ? fileInput.files[0].name : '';
+            });
+        }
+
+        async function submitReport() {
+            const reporterName = document.getElementById('report-reporter').value.trim();
+            const offenderName = document.getElementById('report-offender').value.trim();
+            const reason = document.getElementById('report-reason').value.trim();
+            const fileInput = document.getElementById('report-evidence');
+            if(!reporterName || !offenderName || !reason) { alert('Please fill all text fields.'); return; }
+            const ticketId = generateTicketId();
+            let imageBase64 = null;
+            if (fileInput.files.length > 0) {
+                const file = fileInput.files[0];
+                if (file.size > 8 * 1024 * 1024) { alert('File too large (max 8MB).'); return; }
+                imageBase64 = await new Promise((resolve) => {
+                    const reader = new FileReader();
+                    reader.onload = (e) => resolve(e.target.result.split(',')[1]);
+                    reader.readAsDataURL(file);
+                });
+            }
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/create-report`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ reporterName, offenderName, reason, imageBase64, ticketId })
+                });
+                const data = await response.json();
+                if(data.success) {
+                    document.getElementById('report-form-container').style.display = 'none';
+                    document.getElementById('report-success-container').style.display = 'block';
+                } else { alert('Error submitting report.'); }
+            } catch (error) { console.error("Error:", error); alert('Failed to connect to server.'); }
+        }
+
+        async function submitAppeal() {
+            const bannedName = document.getElementById('appeal-username').value.trim();
+            const banReason = document.getElementById('appeal-ban-reason').value.trim();
+            const unbanReason = document.getElementById('appeal-unban-reason').value.trim();
+            if(!bannedName || !unbanReason) { alert('Please fill required fields.'); return; }
+            const ticketId = generateTicketId();
+            try {
+                const response = await fetch(`${BACKEND_URL}/api/create-appeal`, {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ bannedName, banReason, unbanReason, ticketId })
+                });
+                const data = await response.json();
+                if(data.success) {
+                    document.getElementById('appeal-form-container').style.display = 'none';
+                    document.getElementById('appeal-success-container').style.display = 'block';
+                } else { alert('Error submitting appeal.'); }
+            } catch (error) { console.error("Error:", error); alert('Failed to connect to server.'); }
+        }
+
+        // --- ADMIN & WEBSITE LOGIC ---
+        function loginAdmin() {
+            const user = document.getElementById('login-user').value;
+            const pass = document.getElementById('login-pass').value;
+            if(user === 'NotSgplays' && pass === 'Fine@#1234') {
+                document.getElementById('menu-logged-out').style.display = 'none';
+                document.getElementById('menu-logged-in').style.display = 'flex';
+                navigateTo('admin');
+            } else { alert('Access Denied! Invalid Username or Password.'); }
+        }
+        function logoutAdmin() { 
+            document.getElementById('menu-logged-out').style.display = 'flex'; 
+            document.getElementById('menu-logged-in').style.display = 'none'; 
+            document.getElementById('login-user').value = ''; 
+            document.getElementById('login-pass').value = ''; 
+            navigateTo('home'); 
+        }
+        function toggleDrawer() {
+            const drawer = document.getElementById('side-drawer');
+            const overlay = document.getElementById('overlay-bg');
+            drawer.classList.toggle('open');
+            if (drawer.classList.contains('open')) { overlay.style.display = 'block'; setTimeout(() => { overlay.style.opacity = '1'; }, 10); } 
+            else { overlay.style.opacity = '0'; setTimeout(() => { overlay.style.display = 'none'; }, 300); }
+        }
+        function navigateTo(pageId) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            const target = document.getElementById(pageId);
+            if (target) target.classList.add('active'); else document.getElementById('home').classList.add('active');
+            document.querySelectorAll('.nav-link').forEach(link => { link.classList.remove('active'); if (link.dataset.page === pageId) link.classList.add('active'); });
+            const drawer = document.getElementById('side-drawer');
+            if (drawer.classList.contains('open')) toggleDrawer();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        function showAdminTab(tabId) {
+            document.querySelectorAll('.admin-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('admin-' + tabId).classList.add('active');
+            event.target.classList.add('active');
+        }
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const img = new Image();
+                    img.onload = function() {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        const MAX_SIZE = 100; 
+                        let width = img.width, height = img.height;
+                        if (width > height) { if (width > MAX_SIZE) { height *= MAX_SIZE / width; width = MAX_SIZE; } } 
+                        else { if (height > MAX_SIZE) { width *= MAX_SIZE / height; height = MAX_SIZE; } }
+                        canvas.width = width; canvas.height = height;
+                        ctx.drawImage(img, 0, 0, width, height);
+                        currentLogoSrc = canvas.toDataURL('image/jpeg', 0.5); 
+                        document.getElementById('admin-logo-preview').src = currentLogoSrc;
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        function resetLogoUrl() {
+            currentLogoSrc = DEFAULT_LOGO;
+            document.getElementById('admin-logo-preview').src = DEFAULT_LOGO;
+            document.getElementById('admin-logo-upload').value = ""; 
+        }
+        function renderLoreAdmin() {
+            const container = document.getElementById('admin-modules-container');
+            let html = '';
+            modules.forEach((m, i) => { html += `<div class="admin-sub-card" id="mod-${i}"><h4>Module ${i+1} <button class="btn-remove" onclick="removeModule(${i})">Remove</button></h4><div class="form-group"><label>Title</label><input type="text" class="form-input" id="admin-m${i}-title" value="${m.title.replace(/"/g, '&quot;')}"></div><div class="form-group"><label>Description</label><textarea class="form-input" rows="2" id="admin-m${i}-desc">${m.desc}</textarea></div></div>`; });
+            container.innerHTML = html;
+            document.getElementById('module-count').innerText = `${modules.length}/6`;
+            document.getElementById('btn-add-module').style.display = modules.length >= 6 ? 'none' : 'inline-block';
+        }
+        function addModule() { if (modules.length < 6) { modules.push({ title: '', desc: '' }); renderLoreAdmin(); } }
+        function removeModule(index) { modules.splice(index, 1); renderLoreAdmin(); }
+        function renderNewsAdmin() {
+            const container = document.getElementById('admin-news-container');
+            let html = '';
+            newsPosts.forEach((n, i) => { html += `<div class="admin-sub-card" id="news-${i}"><h4>Post ${i+1} <button class="btn-remove" onclick="removeNewsPost(${i})">Delete</button></h4><div class="form-group"><label>Tag</label><input type="text" class="form-input" id="admin-n${i}-tag" value="${n.tag.replace(/"/g, '&quot;')}"></div><div class="form-group"><label>Date</label><input type="text" class="form-input" id="admin-n${i}-date" value="${n.date}"></div><div class="form-group"><label>Title</label><input type="text" class="form-input" id="admin-n${i}-title" value="${n.title.replace(/"/g, '&quot;')}"></div><div class="form-group"><label>Content</label><textarea class="form-input" rows="3" id="admin-n${i}-content">${n.content}</textarea></div><div class="form-group"><label>Author</label><input type="text" class="form-input" id="admin-n${i}-author" value="${n.author}"></div></div>`; });
+            container.innerHTML = html;
+        }
+        function addNewsPost() { newsPosts.push({ tag: 'Update', date: new Date().toISOString().split('T')[0], title: '', content: '', author: 'Admin' }); renderNewsAdmin(); }
+        function removeNewsPost(index) { newsPosts.splice(index, 1); renderNewsAdmin(); }
+        function renderRulesAdmin() {
+            const container = document.getElementById('rules-admin-preview');
+            let html = '';
+            rulesList.forEach((r, i) => { html += `<div class="rule-list-item"><div class="rule-list-info"><span class="rule-list-num">${i+1}</span><div class="rule-list-text"><strong>${r.title}</strong><span>${r.desc}</span></div></div><div class="rule-list-actions"><button class="rule-action-btn" onclick="moveRule(${i}, -1)" ${i === 0 ? 'disabled' : ''}><i class="fas fa-arrow-up"></i></button><button class="rule-action-btn" onclick="moveRule(${i}, 1)" ${i === rulesList.length - 1 ? 'disabled' : ''}><i class="fas fa-arrow-down"></i></button><button class="rule-action-btn" onclick="editRule(${i})"><i class="fas fa-pencil-alt"></i></button><button class="rule-action-btn" onclick="deleteRule(${i})"><i class="fas fa-trash-alt"></i></button></div></div>`; });
+            container.innerHTML = html;
+            document.getElementById('rule-count').innerText = rulesList.length;
+        }
+        function submitRule() {
+            const title = document.getElementById('new-rule-title').value;
+            const desc = document.getElementById('new-rule-desc').value;
+            if(!title || !desc) { alert('Please enter both title and description.'); return; }
+            if(editingRuleIndex >= 0) { rulesList[editingRuleIndex] = { title, desc }; editingRuleIndex = -1; document.getElementById('rule-form-title').innerText = 'Add New Rule'; document.getElementById('rule-submit-btn').innerText = 'Add to List'; } 
+            else { rulesList.push({ title, desc }); }
+            document.getElementById('new-rule-title').value = ''; document.getElementById('new-rule-desc').value = ''; renderRulesAdmin();
+        }
+        function moveRule(index, dir) { const newIndex = index + dir; if (newIndex < 0 || newIndex >= rulesList.length) return; [rulesList[index], rulesList[newIndex]] = [rulesList[newIndex], rulesList[index]]; renderRulesAdmin(); }
+        function deleteRule(index) { rulesList.splice(index, 1); renderRulesAdmin(); }
+        function editRule(index) { document.getElementById('new-rule-title').value = rulesList[index].title; document.getElementById('new-rule-desc').value = rulesList[index].desc; editingRuleIndex = index; document.getElementById('rule-form-title').innerText = 'Edit Rule ' + (index+1); document.getElementById('rule-submit-btn').innerText = 'Update Rule'; document.querySelector('#admin-rules .admin-sub-card').scrollIntoView({ behavior: 'smooth', block: 'center' }); }
+        function renderRulesPage(searchQuery = '') {
+            const container = document.getElementById('live-rules-page');
+            let rulesHTML = '';
+            const filteredRules = rulesList.filter(r => { if(!searchQuery) return true; return r.title.toLowerCase().includes(searchQuery.toLowerCase()) || r.desc.toLowerCase().includes(searchQuery.toLowerCase()); });
+            if (filteredRules.length === 0) { rulesHTML = '<div class="no-results"><i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: var(--crimson); margin-bottom: 15px; display: block;"></i>No rules found matching your search.</div>'; } 
+            else { filteredRules.forEach((r) => { const originalIndex = rulesList.indexOf(r); rulesHTML += `<div class="rule-card"><div style="color: var(--crimson); font-size: 2.5rem; font-weight: 900; font-family: 'Orbitron'; margin-bottom: 10px; opacity: 0.8;">${String(originalIndex+1).padStart(2, '0')}</div><h3 style="margin-bottom: 15px; font-size: 1.5rem;">${r.title}</h3><p style="color: #ccc;">${r.desc}</p></div>`; }); }
+            container.innerHTML = rulesHTML;
+        }
+        function searchRules() { renderRulesPage(document.getElementById('rules-search-input').value); }
+        function renderNewsPage(searchQuery = '') {
+            const container = document.getElementById('live-news-page');
+            let newsHTML = '';
+            const filteredNews = newsPosts.filter(n => { let matchesFilter = (activeNewsFilter === 'all' || n.tag === activeNewsFilter); let matchesSearch = !searchQuery || n.title.toLowerCase().includes(searchQuery.toLowerCase()) || n.content.toLowerCase().includes(searchQuery.toLowerCase()); return matchesFilter && matchesSearch; });
+            if (filteredNews.length === 0) { newsHTML = '<div class="no-results"><i class="fas fa-exclamation-triangle" style="font-size: 2rem; color: var(--crimson); margin-bottom: 15px; display: block;"></i>No announcements found.</div>'; } 
+            else { filteredNews.forEach(n => { newsHTML += `<div class="news-card"><div class="news-header"><span class="news-tag">${n.tag}</span><span class="news-date">${n.date}</span></div><div class="news-body"><h3>${n.title}</h3><p>${n.content}</p><div style="font-size: 0.85rem; color: #666; font-weight: 600;">Posted by: ${n.author}</div></div></div>`; }); }
+            container.innerHTML = newsHTML;
+        }
+        function searchNews() { renderNewsPage(document.getElementById('news-search-input').value); }
+        function filterNews(tag, btn) { activeNewsFilter = tag; document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active')); btn.classList.add('active'); renderNewsPage(document.getElementById('news-search-input') ? document.getElementById('news-search-input').value : ''); }
+        
+        async function saveAllChanges(showAlert = false) {
+            try {
+                document.getElementById('live-ip').innerText = document.getElementById('admin-ip').value;
+                document.getElementById('live-ip-footer').innerText = document.getElementById('admin-ip').value;
+                document.getElementById('live-hero-title').innerText = document.getElementById('admin-hero-title').value;
+                document.getElementById('live-hero-tagline').innerText = document.getElementById('admin-hero-tagline').value;
+                document.querySelectorAll('.live-discord').forEach(el => el.href = document.getElementById('admin-discord').value);
+                document.querySelectorAll('.live-twitter').forEach(el => el.href = document.getElementById('admin-twitter').value);
+                document.querySelectorAll('.live-youtube').forEach(el => el.href = document.getElementById('admin-youtube').value);
+                const owners = document.getElementById('admin-owners').value.split(',');
+                let ownersHTML = '';
+                owners.forEach(owner => { if(owner.trim()) ownersHTML += `<div class="owner-card"><div class="owner-name">${owner.trim().toUpperCase()}</div><div class="owner-role">Owner</div></div>`; });
+                document.getElementById('live-owners').innerHTML = ownersHTML;
+                document.querySelectorAll('.site-logo').forEach(img => { img.src = currentLogoSrc; });
+                document.getElementById('live-lore-title').innerText = document.getElementById('admin-lore-title').value;
+                document.getElementById('live-lore-subtitle').innerText = document.getElementById('admin-lore-subtitle').value;
+                document.getElementById('live-lore-desc').innerText = document.getElementById('admin-lore-desc').value;
+                let updatedModules = [];
+                for(let i=0; i<modules.length; i++) { updatedModules.push({ title: document.getElementById(`admin-m${i}-title`).value, desc: document.getElementById(`admin-m${i}-desc`).value }); }
+                modules = updatedModules;
+                let modHTML = '';
+                modules.forEach((m, i) => { if(m.title.trim() !== '' || m.desc.trim() !== '') { modHTML += `<div class="card"><div class="module-num">Module ${String(i+1).padStart(2, '0')}</div><h3>${m.title}</h3><p>${m.desc}</p></div>`; } });
+                document.getElementById('live-lore-modules').innerHTML = modHTML;
+                document.getElementById('live-home-modules').innerHTML = modHTML; 
+                let homeNewsHTML = '';
+                newsPosts.forEach(n => { homeNewsHTML += `<div class="news-card"><div class="news-header"><span class="news-tag">${n.tag}</span><span class="news-date">${n.date}</span></div><div class="news-body"><h3>${n.title}</h3><p>${n.content}</p><div style="font-size: 0.85rem; color: #666; font-weight: 600;">Posted by: ${n.author}</div></div></div>`; });
+                document.getElementById('live-home-news').innerHTML = homeNewsHTML;
+                renderRulesPage(document.getElementById('rules-search-input') ? document.getElementById('rules-search-input').value : '');
+                renderNewsPage(document.getElementById('news-search-input') ? document.getElementById('news-search-input').value : '');
+                
+                const saved = await saveData(); 
+                if (showAlert && saved) alert('✅ Website Updated & Saved to Cloud! Everyone will see this now.');
+            } catch (e) { 
+                console.error("Update Error:", e); 
+                if(showAlert) alert("An error occurred while updating the website."); 
+            }
+        }
+        function copyIp() {
+            const ipText = document.getElementById('live-ip').innerText;
+            navigator.clipboard.writeText(ipText).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                if (btn) { const orig = btn.innerText; btn.innerText = 'Copied!'; btn.style.background = '#28a745'; setTimeout(() => { btn.innerText = orig; btn.style.background = ''; }, 2000); }
+            }).catch(() => alert('Manually type: ' + ipText));
+        }
+        
+        // --- BULLETPROOF INITITAL RENDER ---
+        async function initializeSite() {
+            try { 
+                await loadData(); 
+            } catch (e) { 
+                console.error("Initial Load Error:", e); 
+            }
+            renderLoreAdmin(); 
+            renderNewsAdmin(); 
+            renderRulesAdmin(); 
+            try {
+                await saveAllChanges(false); 
+            } catch (e) {
+                console.error("Initial Render Error:", e);
+            }
+        }
+        initializeSite();
+    </script>
+</body>
+</html>
